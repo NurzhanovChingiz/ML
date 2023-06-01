@@ -1,3 +1,5 @@
+This folder contain examples for The RegressionMetrics class.
+
 The RegressionMetrics class is designed to compute and print regression evaluation metrics.
 
 The class takes the following arguments in its constructor:
