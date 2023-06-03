@@ -7,16 +7,20 @@ class RegressionMetrics:
     A class for computing and printing regression evaluation metrics.
 
     Args:
-        pipeline: The regression pipeline model.
+        pipeline_or_model: The regression pipeline or model.
         X_test: The test features.
         y_test: The test labels.
         X_val: The validation features.
         y_val: The validation labels.
         style: Flag indicating whether to apply styling to the output. Default is False.
+        is_model: Flag indicating whether the provided object is a regression model. Default is False.
     """
 
-    def __init__(self, pipeline, X_test, y_test, X_val, y_val, style=False):
-        self.pipeline = pipeline
+    def __init__(self, pipeline_or_model, X_test, y_test, X_val, y_val, style=False, is_model=False):
+        if is_model:
+            self.model = pipeline_or_model
+        else:
+            self.pipeline = pipeline_or_model
         self.X_test = X_test
         self.y_test = y_test
         self.X_val = X_val
@@ -67,7 +71,10 @@ class RegressionMetrics:
         Returns:
             The R-squared score for the test set.
         """
-        return self.pipeline.score(self.X_test, self.y_test)
+        if hasattr(self, 'model'):
+            return self.model.score(self.X_test, self.y_test)
+        else:
+            return self.pipeline.score(self.X_test, self.y_test)
 
     def r2_val(self):
         """
@@ -85,8 +92,8 @@ class RegressionMetrics:
         Returns:
             The Akaike Information Criterion value.
         """
-        y_pred = self.pipeline.predict(self.X_val)
-        n_params = len(self.pipeline.named_steps)
+        y_pred = self.predict()
+        n_params = len(self.pipeline.named_steps) if hasattr(self, 'pipeline') else 0
         n = len(self.y_val)
         mse = mean_squared_error(self.y_val, y_pred)
         aic = 2 * n_params - 2 * np.log(mse) + n_params * np.log(n)
@@ -99,8 +106,8 @@ class RegressionMetrics:
         Returns:
             The Bayesian Information Criterion value.
         """
-        y_pred = self.pipeline.predict(self.X_val)
-        n_params = len(self.pipeline.named_steps)
+        y_pred = self.predict()
+        n_params = len(self.pipeline.named_steps) if hasattr(self, 'pipeline') else 0
         n = len(self.y_val)
         mse = mean_squared_error(self.y_val, y_pred)
         bic = -2 * np.log(mse) + n_params * np.log(n)
@@ -127,8 +134,15 @@ class RegressionMetrics:
     def predict(self):
         """
         Performs prediction on the validation set.
+
+        Returns:
+            The predicted values.
         """
-        self.y_pred = self.pipeline.predict(self.X_val)
+        if hasattr(self, 'model'):
+            self.y_pred = self.model.predict(self.X_val)
+        else:
+            self.y_pred = self.pipeline.predict(self.X_val)
+        return self.y_pred
 
     def set_frame_style(self, df, caption=""):
         """
@@ -152,6 +166,9 @@ class RegressionMetrics:
     def run(self):
         """
         Runs the regression metrics calculation and printing.
+
+        Returns:
+            The DataFrame containing the metric values.
         """
         try:
             self.predict()
@@ -174,8 +191,9 @@ class RegressionMetrics:
             df_metrics.index.name = "Metric"
 
             if self.style:
-                display(self.set_frame_style(df_metrics))
+                return self.set_frame_style(df_metrics)
             else:
-                print(df_metrics)
+                return df_metrics
         except Exception as e:
             print("An error occurred:", str(e))
+

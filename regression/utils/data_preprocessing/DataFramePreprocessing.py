@@ -11,9 +11,14 @@ class DataFramePreprocessing(TransformerMixin, BaseEstimator):
         '''
         Constructor for DataFramePreprocessing class.
 
+        Parameters:
+        - X (pandas.DataFrame): Input DataFrame.
         '''
-        
-    def get_features(self, X):
+        self.X = None
+        self.numerical_features = []
+        self.categorical_features = []
+        self.boolean_features = []
+    def get_features(self):
         '''
         Extracts the numeric, categorical, and boolean features from the input DataFrame.
 
@@ -23,9 +28,9 @@ class DataFramePreprocessing(TransformerMixin, BaseEstimator):
         Returns:
         - None
         '''
-        self.numerical_features = X.select_dtypes(include=['int16', 'float16', 'int32', 'float32', 'int64', 'float64']).columns
-        self.categorical_features = X.select_dtypes(include=['object']).columns
-        self.boolean_features = X.select_dtypes(include=['bool']).columns
+        self.numerical_features = self.X.select_dtypes(include=['int16', 'float16', 'int32', 'float32', 'int64', 'float64']).columns
+        self.categorical_features = self.X.select_dtypes(include=['object']).columns
+        self.boolean_features = self.X.select_dtypes(include=['bool']).columns
         
     def categorical_transformer(self):
         '''
@@ -61,7 +66,7 @@ class DataFramePreprocessing(TransformerMixin, BaseEstimator):
         Returns:
         - DataFrameMapper: DataFrameMapper object that applies the specified transformations to the input data.
         '''
-        self.get_features(X)
+        
         return DataFrameMapper(self.numerical_transformer() + self.categorical_transformer() + self.boolean_transformer(), df_out=True)
 
     def fit(self, X, y=None):
@@ -76,6 +81,9 @@ class DataFramePreprocessing(TransformerMixin, BaseEstimator):
         - self: Returns the instance itself.
         '''
         X = X.copy()
+        self.X = X
+        self.get_features()
+        self.mapper()
         X = check_array(X, accept_sparse=False)
 
         self.n_features_in_ = X.shape[1]
@@ -95,6 +103,7 @@ class DataFramePreprocessing(TransformerMixin, BaseEstimator):
         - array-like or DataFrame: Transformed data.
         '''
         X = X.copy()
+        
         check_is_fitted(self, ['is_fitted_'])
         X = check_array(X, accept_sparse=True)
     
