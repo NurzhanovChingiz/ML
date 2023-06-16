@@ -1,0 +1,42 @@
+# Configs
+class CFG:
+    #Random seed
+    SEED = 42
+    
+    BASE = '/home/ml/Jupyter_root/credit/'
+    
+    n_splits = 20 
+    
+    log_file_name_xgb = 'settings_xgb.log'  # flaml log file
+    log_file_name_lgbm = 'settings_lgbm.log'
+    log_file_name_cat = 'settings_cat.log'
+    p_train_time_xgb = 720
+    p_train_time_lgbm = 720
+    p_train_time_cat = 720
+    
+    metric = "r2"
+    eval_method = "cv"
+
+X_train_shape = X_train.shape[0]
+FL_automl_settings_lgbm = {        
+        "time_budget": CFG.p_train_time_lgbm,  # in seconds
+        "metric": CFG.metric,
+        "task": 'regression',
+        "verbose": 3,
+        "n_jobs": -1,
+        "log_file_name": CFG.log_file_name_lgbm,  # flaml log file
+        "eval_method": CFG.eval_method,
+        "estimator_list": [            
+            "lgbm",
+        ],        
+
+        "auto_augment":True,
+        "n_splits": CFG.n_splits,
+        "ensemble": True,
+        "sample_weight": np.ones(X_train_shape),
+        "seed":1,
+        "custom_hp": {
+            "lgbm":{
+                "boosting_type":{"domain":'dart'},
+                "seed": {"domain": CFG.SEED},
+            }}} 
