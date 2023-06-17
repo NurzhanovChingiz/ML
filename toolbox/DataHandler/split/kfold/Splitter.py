@@ -16,6 +16,13 @@ class Splitter:
            random_state (int): Random state for reproducibility.
            shuffle (bool): Whether to shuffle the data before splitting into batches.
         """
+        # Ensure the data size is a multiple of 2*n_splits
+        total_samples = len(X)
+        surplus_samples = total_samples % (2 * n_splits)
+    
+        if surplus_samples > 0:
+            X = X[:-surplus_samples]
+            y = y[:-surplus_samples]
         self.X = X
         self.y = y
         self.n_splits = n_splits
